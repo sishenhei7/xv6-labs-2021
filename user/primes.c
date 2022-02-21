@@ -4,35 +4,55 @@
 
 void
 primes(int fd) {
-  int num, p[2], prime, buf, pid;
+  int prime;
 
-  while(read(fd, num, 1)) {
-    if (!prime) {
-      prime = num
-      printf(prime)
-    } else if (num % prime != 0) {
-      write(p[1], i, 1)
+  if (read(fd, &prime, sizeof(prime))) {
+    printf("prime: %d\n", prime);
 
-      if (!pid && !(pid = fork())) {
-        primes(p[0])
+    int p[2];
+    pipe(p);
+
+    if (fork()) {
+      close(p[0]);
+
+      int i;
+      while(read(fd, &i, sizeof(i))) {
+        if (i % prime != 0) {
+          write(p[1], &i, sizeof(i));
+        }
       }
+
+      close(p[1]);
+      wait(0);
+    } else {
+      close(p[1]);
+      primes(p[0]);
     }
   }
 }
 
 int
 main(int argc, char *argv[]) {
-  int i, p[2], prime, buf;
+  int p[2];
+
+  pipe(p);
 
   if (fork()) {
+    close(p[0]);
+
+    int i;
     for (i = 2; i <= 35; i += 1) {
-      write(p[1], i, 1)
+      write(p[1], &i, sizeof(i));
     }
-    wait(void 0)
-    exit(0)
+
+    close(p[1]);
+    wait(0);
   } else {
-    primes(p[0])
+    close(p[1]);
+    primes(p[0]);
   }
+
+  exit(0);
 }
 
 
