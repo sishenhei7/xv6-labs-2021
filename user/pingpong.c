@@ -8,29 +8,21 @@ main(int argc, char *argv[]) {
   char buf[1];
 
   if(argc > 1){
-    fprintf(2, "Usage: sleep ...\n");
+    fprintf(2, "Usage: pingpong ...\n");
     exit(1);
   }
 
   pipe(parent_fd);
   pipe(child_fd);
 
-  if (fork() == 0) {
-    close(parent_fd[1]);
-    close(child_fd[0]);
-    if (read(parent_fd[0], buf, 1) == 1) {
-      fprintf(1, "%d: received ping\n", getpid());
-      write(child_fd[1], "q", 1);
-      close(child_fd[1]);
-    }
-  } else {
-    close(parent_fd[0]);
-    close(child_fd[1]);
+  if (fork()) {
     write(parent_fd[1], "p", 1);
-    if (read(child_fd[0], buf, 1) == 1) {
-      fprintf(1, "%d: received pong\n", getpid());
-      close(parent_fd[1]);
-    }
+    read(child_fd[0], buf, 1);
+    fprintf(1, "%d: received pong\n", getpid());
+  } else {
+    read(parent_fd[0], buf, 1);
+    fprintf(1, "%d: received ping\n", getpid());
+    write(child_fd[1], "q", 1);
   }
 
   exit(0);
