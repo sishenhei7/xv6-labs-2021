@@ -21,29 +21,38 @@ find(char *path, const char *file_name) {
     return;
   }
 
-  if (st.type == T_FILE) {
-    fprintf(2, "find: path isn't a dir!\n");
+  if (st.type != T_DIR) {
+    fprintf(2, "find: %s isn't a dir!\n", path);
     close(fd);
     return;
   }
 
   while(read(fd, &de, sizeof(de)) == sizeof(de)){
-    if(stat(path, &st) < 0){
-      printf("ls: cannot stat %s\n", path);
+    if (de.inum == 0 || !strcmp(de.name, ".") || !strcmp(de.name, ".."))
+			continue;
+
+    if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
+      printf("find: path too long\n");
+      break;
+    }
+
+    strcpy(buf, path);
+    p = buf+strlen(buf);
+    *p++ = '/';
+    memmove(p, de.name, DIRSIZ);
+
+    if(stat(buf, &st) < 0){
+      printf("find: cannot stat %s\n", path);
       continue;
     }
 
     switch(st.type){
       case T_FILE:
-        if (strcmp(file_name, de.name)) {
-          printf("&s\n", de.name);
+        if (!strcmp(file_name, de.name)) {
+          printf("%s\n", buf);
         }
         break;
       case T_DIR:
-        strcpy(buf, path);
-        p = buf+strlen(buf);
-        *p++ = '/';
-        memmove(p, de.name, DIRSIZ);
         find(buf, file_name);
         break;
     }
