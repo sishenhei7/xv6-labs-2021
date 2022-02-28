@@ -110,11 +110,11 @@ sys_trace(void) {
 
 int
 sys_sysinfo(void) {
-  int addr;
+  uint64 addr;
   struct sysinfo info;
   struct proc *p = myproc();
 
-  if(argint(0, &addr) < 0)
+  if(argaddr(0, &addr) < 0)
     return -1;
 
   info.freemem = getfreemem();
