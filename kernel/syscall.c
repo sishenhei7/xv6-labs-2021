@@ -175,7 +175,7 @@ syscall(void)
   }
 
   // trace
-  if (p->sysmask >> num) {
+  if (p->sysmask & (1 << num)) {
     printf("%d: syscall %s -> %d\n",
             p->pid, syscallnames[num], p->trapframe->a0);
   }
