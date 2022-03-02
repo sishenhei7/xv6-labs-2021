@@ -45,7 +45,7 @@ kvmmake(void)
 
   // map kernel stacks
   proc_mapstacks(kpgtbl);
-  
+
   return kpgtbl;
 }
 
@@ -142,7 +142,7 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 
   if(size == 0)
     panic("mappages: size");
-  
+
   a = PGROUNDDOWN(va);
   last = PGROUNDDOWN(va + size - 1);
   for(;;){
@@ -333,7 +333,7 @@ void
 uvmclear(pagetable_t pagetable, uint64 va)
 {
   pte_t *pte;
-  
+
   pte = walk(pagetable, va, 0);
   if(pte == 0)
     panic("uvmclear");
@@ -430,5 +430,40 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return 0;
   } else {
     return -1;
+  }
+}
+
+// print pagetable
+void
+vmprint(pagetable_t pagetable) {
+  printf("page table %p\n", pagetable);
+
+  // there are 2^9 = 512 PTEs in a page table.
+  for(int i = 0; i < 512; i++) {
+    pte_t *pte = &pagetable[i];
+    if (*pte & PTE_V) {
+      pagetable_t pagetable2 = (pagetable_t)PTE2PA(*pte);
+      printf("..%d: pte %p pa %p\n", i, *pte, pagetable2);
+
+      // second level page table
+      for (int i = 0; i < 512; i++) {
+        pte_t *pte2 = &pagetable2[i];
+
+        if (*pte2 & PTE_V) {
+          pagetable_t pagetable3 = (pagetable_t)PTE2PA(*pte2);
+          printf(".. ..%d: pte %p pa %p\n", i, *pte2, pagetable3);
+
+          // third level page table
+          for (int i = 0; i < 512; i++) {
+            pte_t *pte3 = &pagetable3[i];
+
+            if (*pte3 & PTE_V) {
+              pagetable_t pa = (pagetable_t)PTE2PA(*pte3);
+              printf(".. .. ..%d: pte %p pa %p\n", i, *pte3, pa);
+            }
+          }
+        }
+      }
+    }
   }
 }

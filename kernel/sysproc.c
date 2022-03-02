@@ -46,7 +46,7 @@ sys_sbrk(void)
 
   if(argint(0, &n) < 0)
     return -1;
-  
+
   addr = myproc()->sz;
   if(growproc(n) < 0)
     return -1;
@@ -81,6 +81,35 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
+  uint64 va, abits, mask = 0;
+  int n;
+  pagetable_t pagetable = myproc()->pagetable;
+
+  // vmprint(pagetable);
+
+  if(argaddr(0, &va) < 0 || argint(1, &n) < 0 || argaddr(2, &abits) < 0) {
+    printf("pgaccess: args failed\n");
+    return -1;
+  }
+
+  if (n > sizeof(mask) * 8) {
+    printf("pgaccess: n is too big\n");
+    return -1;
+  }
+
+  for (int m = 0; m < n; m++) {
+    pte_t *pte = walk(pagetable, va + m * PGSIZE, 0);
+    if (pte && (*pte & PTE_A)) {
+      mask = mask | 1 << m;
+      *pte &= ~PTE_A; //why?
+    }
+  }
+
+  if (copyout(pagetable, abits, (char*)&mask, sizeof(mask)) < 0) {
+    printf("pgaccess: copyout failed\n");
+    return -1;
+  }
+
   return 0;
 }
 #endif
